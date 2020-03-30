@@ -1,0 +1,38 @@
+ARG ruby_version
+
+FROM ruby:$ruby_version-alpine
+
+ARG bundler_version
+ARG uid
+ARG gid
+
+RUN apk add --no-cache --update \
+      build-base \
+      curl \
+      git \
+      libcurl \
+      linux-headers \
+      nodejs \
+      postgresql-client \
+      postgresql-dev \
+      tzdata \
+      wget \
+      yarn \
+      zsh
+
+RUN addgroup -g $gid -S app && \
+      adduser -u $uid -S -G app -h /home/app -D app && \
+      chown -R app:app /usr/local/bundle
+
+USER app
+
+RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
+
+RUN mkdir -p /home/app/code /home/app/code/node_modules && \
+      gem install bundler --version=$bundler_version && \
+      bundle config --global jobs $(nproc) && \
+      bundle config --global retry 3
+
+WORKDIR /home/app/code
+
+CMD ["/bin/zsh"]

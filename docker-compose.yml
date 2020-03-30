@@ -1,0 +1,40 @@
+x-base: &base
+  build:
+    context: .
+    dockerfile: Dockerfile.dev
+    args:
+      - ruby_version=2.7.0
+      - bundler_version=2.1.4
+      - uid=$UID
+      - gid=$GID
+  restart: always
+  volumes:
+    - .:/home/app/code
+    - bundle:/usr/local/bundle
+    - node_modules:/home/app/code/node_modules
+
+version: "3.7"
+services:
+  web:
+    <<: *base
+    command: bundle exec rails s -b 0.0.0.0
+    links:
+      - db
+    ports:
+      - "3000:3000"
+  db:
+    image: postgres:12.2
+    environment:
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=local
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - db:/var/lib/postgresql/data
+
+volumes:
+  bundle:
+  node_modules:
+  db:
